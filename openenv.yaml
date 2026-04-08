@@ -1,10 +1,13 @@
 name: meetflow_workflow_env
-description: Multi-step meeting workflow automation environment for extracting, structuring, prioritizing, and grading action items from real-world operational transcripts.
+description: Multi-step meeting workflow automation environment
 version: 2.0.0
 
 entrypoint:
-  module: server
+  module: server.app
   app: app
+
+api:
+  base_url: http://localhost:7860
 
 metadata:
   domain: meeting_operations
@@ -17,30 +20,16 @@ endpoints:
   reset: /reset
   step: /step
   state: /state
-  health: /health
 
 tasks:
   - name: easy
+    description: Simple workflow extraction
   - name: medium
+    description: Moderate reasoning workflows
   - name: hard
+    description: Complex multi-step workflows
 
 models:
-  Action:
-    action_type: string
-    item: string
-    owner: string|null
-    priority: string|null
-    deadline: string|null
-    dependency: string|null
-    risk_flag: boolean|null
-
-  Observation:
-    transcript: string
-    current_stage: string
-    stage_index: integer
-    step_count: integer
-    available_actions: array
-    extracted_items: array
-    meeting_context: object
-    unresolved_slots: array
-    notes: array
+  observation: env.models.Observation
+  action: env.models.Action
+  reward: env.models.Reward

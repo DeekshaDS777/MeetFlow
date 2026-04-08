@@ -82,10 +82,6 @@ def to_jsonable(value: Any):
     return value
 
 
-def log_episode(task: str, episode_num: int, total_episodes: int) -> None:
-    print(f"[EPISODE] task={task} episode={episode_num}/{total_episodes}", flush=True)
-
-
 def log_start(task: str, env: str, model: str) -> None:
     print(f"[START] task={task} env={env} model={model}", flush=True)
 
@@ -612,7 +608,7 @@ async def run_single_episode(client: OpenAI, task_name: str, episode_num: int, t
     rewards: List[float] = []
     steps_taken = 0
 
-    log_episode(task_name, episode_num, total_episodes)
+
     log_start(task=task_name, env=BENCHMARK, model=MODEL_NAME)
 
     obs = env.reset()
