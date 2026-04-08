@@ -1,0 +1,46 @@
+name: meetflow_workflow_env
+description: Multi-step meeting workflow automation environment for extracting, structuring, prioritizing, and grading action items from real-world operational transcripts.
+version: 2.0.0
+
+entrypoint:
+  module: server
+  app: app
+
+metadata:
+  domain: meeting_operations
+  modality: text
+  reward_range: [0.0, 1.0]
+  long_horizon: true
+  grader_type: deterministic_structured_grader
+
+endpoints:
+  reset: /reset
+  step: /step
+  state: /state
+  health: /health
+
+tasks:
+  - name: easy
+  - name: medium
+  - name: hard
+
+models:
+  Action:
+    action_type: string
+    item: string
+    owner: string|null
+    priority: string|null
+    deadline: string|null
+    dependency: string|null
+    risk_flag: boolean|null
+
+  Observation:
+    transcript: string
+    current_stage: string
+    stage_index: integer
+    step_count: integer
+    available_actions: array
+    extracted_items: array
+    meeting_context: object
+    unresolved_slots: array
+    notes: array
