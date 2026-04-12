@@ -5,12 +5,16 @@ from typing import Dict, List
 
 from models import ActionItem
 
-TITLE_WEIGHT = 0.22
-OWNER_WEIGHT = 0.18
-PRIORITY_WEIGHT = 0.16
-DEADLINE_WEIGHT = 0.16
+# 0.30 for category/title correctness
+TITLE_WEIGHT = 0.30
+
+# 0.70 for workflow/action correctness
+OWNER_WEIGHT = 0.16
+PRIORITY_WEIGHT = 0.14
+DEADLINE_WEIGHT = 0.14
 DEPENDENCY_WEIGHT = 0.12
-RISK_WEIGHT = 0.16
+RISK_WEIGHT = 0.14
+
 FIELD_WEIGHTS = {
     "title": TITLE_WEIGHT,
     "owner": OWNER_WEIGHT,
@@ -44,20 +48,41 @@ def _bool_similarity(a: bool | None, b: bool | None) -> float:
     return 1.0 if a == b else 0.0
 
 
+def _bounded_score(value: float, floor: float = 0.05, ceiling: float = 0.95) -> float:
+    value = round(float(value), 4)
+    if value <= floor:
+        return floor
+    if value >= ceiling:
+        return ceiling
+    return value
+
+
 def _field_score(pred: ActionItem, truth: ActionItem) -> Dict[str, float]:
-    out: Dict[str, float] = {}
-    out["title"] = min(1.0, _similarity(pred.title, truth.title))
-    out["owner"] = _similarity(pred.owner, truth.owner)
-    out["priority"] = _similarity(pred.priority, truth.priority)
-    out["deadline"] = _similarity(pred.deadline, truth.deadline)
-    out["dependency"] = 1.0 if _norm(pred.dependency) == _norm(truth.dependency) else 0.35 if _norm(pred.dependency) != "none" and _norm(truth.dependency) != "none" else 0.0
-    out["risk_flag"] = _bool_similarity(pred.risk_flag, truth.risk_flag)
+    dependency_pred = _norm(pred.dependency)
+    dependency_truth = _norm(truth.dependency)
+
+    if dependency_pred == dependency_truth:
+        dependency_score = 1.0
+    elif dependency_pred != "none" and dependency_truth != "none" and dependency_pred and dependency_truth:
+        dependency_score = 0.40
+    else:
+        dependency_score = 0.0
+
+    out: Dict[str, float] = {
+        "title": min(1.0, _similarity(pred.title, truth.title)),
+        "owner": _similarity(pred.owner, truth.owner),
+        "priority": _similarity(pred.priority, truth.priority),
+        "deadline": _similarity(pred.deadline, truth.deadline),
+        "dependency": dependency_score,
+        "risk_flag": _bool_similarity(pred.risk_flag, truth.risk_flag),
+    }
     return out
 
 
 def match_items(predictions: List[ActionItem], truth_items: List[ActionItem]) -> List[tuple[int, int, float]]:
     pairs: List[tuple[int, int, float]] = []
     used_truth: set[int] = set()
+
     for pi, pred in enumerate(predictions):
         best_j = -1
         best_score = 0.0
@@ -68,17 +93,21 @@ def match_items(predictions: List[ActionItem], truth_items: List[ActionItem]) ->
             if sim > best_score:
                 best_score = sim
                 best_j = tj
+
         if best_j >= 0 and best_score >= 0.58:
             used_truth.add(best_j)
             pairs.append((pi, best_j, best_score))
+
     return pairs
 
 
 def structured_score(predictions: List[ActionItem], truth_items: List[ActionItem], difficulty: str) -> Dict[str, float]:
     pairs = match_items(predictions, truth_items)
+
     matched_count = len(pairs)
     coverage = matched_count / max(1, len(truth_items))
     precision = matched_count / max(1, len(predictions))
+
     base = 0.0
     for pi, tj, _ in pairs:
         pred = predictions[pi]
@@ -86,29 +115,71 @@ def structured_score(predictions: List[ActionItem], truth_items: List[ActionItem
         fields = _field_score(pred, truth)
         item_score = sum(fields[field] * FIELD_WEIGHTS[field] for field in FIELD_WEIGHTS)
         base += item_score
+
     normalized_items = base / max(1, len(truth_items))
-    difficulty_bonus = {"easy": 0.03, "medium": 0.04, "hard": 0.05}[difficulty]
-    aggregate = (0.70 * normalized_items) + (0.18 * coverage) + (0.10 * precision) + difficulty_bonus
-    aggregate = min(0.99, max(0.01, aggregate))
+
+    # Difficulty adjustment without ever reaching 1.0
+    difficulty_bonus = {
+        "easy": 0.020,
+        "medium": 0.030,
+        "hard": 0.040,
+    }[difficulty]
+
+    aggregate = (
+        0.72 * normalized_items
+        + 0.16 * coverage
+        + 0.08 * precision
+        + difficulty_bonus
+    )
+
+    aggregate = _bounded_score(aggregate)
+
     return {
         "score": aggregate,
-        "coverage": coverage,
-        "precision": precision,
+        "coverage": round(coverage, 4),
+        "precision": round(precision, 4),
         "matched": float(matched_count),
     }
 
 
-def step_reward(previous_score: float, current_score: float, valid_action: bool, difficulty: str, stage_index: int, step_count: int, repeated: bool) -> float:
+def step_reward(
+    previous_score: float,
+    current_score: float,
+    valid_action: bool,
+    difficulty: str,
+    stage_index: int,
+    step_count: int,
+    repeated: bool,
+) -> float:
     delta = current_score - previous_score
-    difficulty_scale = {"easy": 0.94, "medium": 0.97, "hard": 1.00}[difficulty]
-    stage_bonus = 0.022 + (stage_index * 0.005)
-    step_decay = min(0.04, step_count * 0.0013)
-    jitter = ((step_count + 1) * (stage_index + 2) % 7) * 0.003
-    reward = 0.085 + (max(-0.08, delta) * 0.74 * difficulty_scale) + stage_bonus - step_decay + jitter
+
+    difficulty_scale = {
+        "easy": 0.96,
+        "medium": 0.99,
+        "hard": 1.02,
+    }[difficulty]
+
+    # Smooth stage-aware base
+    base = 0.14 + (stage_index * 0.015)
+
+    # Reward real progress, cap extremes
+    progress = max(-0.10, min(0.20, delta)) * 0.80 * difficulty_scale
+
+    # Mild decay to discourage dragging
+    decay = min(0.035, step_count * 0.0014)
+
+    # Deterministic variation to avoid repeated scores
+    jitter_seed = ((step_count + 3) * (stage_index + 5)) % 11
+    jitter = (jitter_seed - 5) * 0.004
+
+    reward = base + progress - decay + jitter
+
     if valid_action:
-        reward += 0.028
+        reward += 0.03
     else:
-        reward -= 0.072
+        reward -= 0.08
+
     if repeated:
-        reward -= 0.11
-    return min(0.99, max(0.01, round(reward, 2)))
+        reward -= 0.12
+
+    return _bounded_score(reward)
