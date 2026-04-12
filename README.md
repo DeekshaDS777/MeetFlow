@@ -1,3 +1,11 @@
+---
+title: MeetFlow OpenEnv
+emoji: 🤖
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_port: 7860
+---
 # MeetFlow Phase 3 Ready Repository
 
 MeetFlow is a real-world, multi-stage OpenEnv-style environment for converting messy meeting transcripts into structured operational action items. It is built for strict evaluation and hybrid agent baselines: deterministic extraction followed by LLM-driven downstream decisions.
