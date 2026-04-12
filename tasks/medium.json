@@ -1,0 +1,92 @@
+[
+  {
+    "id": "medium_1",
+    "transcript": "Incident review: Sanjai should reproduce the payment timeout today. Once that is reproduced, Meena will draft the RCA summary by tomorrow. Vikram must finish the migration checklist tonight because rollout depends on it.",
+    "meeting_context": {
+      "meeting_type": "incident_review",
+      "team": "platform",
+      "urgency": "high",
+      "participants": [
+        "Sanjai",
+        "Meena",
+        "Vikram",
+        "Priya"
+      ]
+    },
+    "action_items": [
+      {
+        "title": "reproduce payment timeout",
+        "owner": "Sanjai",
+        "priority": "high",
+        "deadline": "today",
+        "dependency": "none",
+        "risk_flag": true
+      },
+      {
+        "title": "draft RCA summary",
+        "owner": "Meena",
+        "priority": "high",
+        "deadline": "tomorrow",
+        "dependency": "reproduce payment timeout",
+        "risk_flag": false
+      },
+      {
+        "title": "finish migration checklist",
+        "owner": "Vikram",
+        "priority": "high",
+        "deadline": "tonight",
+        "dependency": "none",
+        "risk_flag": true
+      }
+    ]
+  },
+  {
+    "id": "medium_2",
+    "transcript": "Release gate: Ashu must verify the production backup before rollout. After Ashu confirms it, Divya will prepare the rollback checklist. Kousik should approve the rollout communication today, and Priya needs to publish the updated release notes by 6 PM.",
+    "meeting_context": {
+      "meeting_type": "release_gate",
+      "team": "release_ops",
+      "urgency": "high",
+      "participants": [
+        "Ashu",
+        "Divya",
+        "Kousik",
+        "Priya"
+      ]
+    },
+    "action_items": [
+      {
+        "title": "verify production backup",
+        "owner": "Ashu",
+        "priority": "high",
+        "deadline": "before rollout",
+        "dependency": "none",
+        "risk_flag": true
+      },
+      {
+        "title": "prepare rollback checklist",
+        "owner": "Divya",
+        "priority": "high",
+        "deadline": "after backup confirmation",
+        "dependency": "verify production backup",
+        "risk_flag": true
+      },
+      {
+        "title": "approve rollout communication",
+        "owner": "Kousik",
+        "priority": "medium",
+        "deadline": "today",
+        "dependency": "none",
+        "risk_flag": false
+      },
+      {
+        "title": "publish updated release notes",
+        "owner": "Priya",
+        "priority": "medium",
+        "deadline": "6 PM",
+        "dependency": "approve rollout communication",
+        "risk_flag": false
+      }
+    ]
+  }
+]

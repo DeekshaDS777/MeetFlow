@@ -1,0 +1,127 @@
+[
+  {
+    "id": "hard_1",
+    "transcript": "Security escalation: Priya must revoke the compromised access token immediately. After that, Rohit should rotate the affected service credentials within one hour. Divya needs to prepare the internal incident brief before 5 PM. Sanjai will validate the credential rotation before rollout, and Kousik should update the rollback plan if Sanjai finds a failure.",
+    "meeting_context": {
+      "meeting_type": "security_escalation",
+      "team": "security_platform",
+      "urgency": "critical",
+      "participants": [
+        "Priya",
+        "Rohit",
+        "Divya",
+        "Sanjai",
+        "Kousik"
+      ]
+    },
+    "action_items": [
+      {
+        "title": "revoke compromised access token",
+        "owner": "Priya",
+        "priority": "critical",
+        "deadline": "immediately",
+        "dependency": "none",
+        "risk_flag": true
+      },
+      {
+        "title": "rotate affected service credentials",
+        "owner": "Rohit",
+        "priority": "critical",
+        "deadline": "within one hour",
+        "dependency": "revoke compromised access token",
+        "risk_flag": true
+      },
+      {
+        "title": "prepare internal incident brief",
+        "owner": "Divya",
+        "priority": "high",
+        "deadline": "before 5 PM",
+        "dependency": "none",
+        "risk_flag": true
+      },
+      {
+        "title": "validate credential rotation",
+        "owner": "Sanjai",
+        "priority": "critical",
+        "deadline": "before rollout",
+        "dependency": "rotate affected service credentials",
+        "risk_flag": true
+      },
+      {
+        "title": "update rollback plan",
+        "owner": "Kousik",
+        "priority": "high",
+        "deadline": "if validation fails",
+        "dependency": "validate credential rotation",
+        "risk_flag": true
+      }
+    ]
+  },
+  {
+    "id": "hard_2",
+    "transcript": "Launch war room: Meena should confirm regional inventory sync before launch. Only after that can Ashu enable the pricing patch. Divya must prepare the customer comms draft by 4 PM, but she needs the approved launch window from Kousik first. Priya should verify the payment fallback flow before rollout, and Rohit must update the rollback steps if Priya reports a blocker.",
+    "meeting_context": {
+      "meeting_type": "launch_war_room",
+      "team": "commerce_launch",
+      "urgency": "critical",
+      "participants": [
+        "Meena",
+        "Ashu",
+        "Divya",
+        "Kousik",
+        "Priya",
+        "Rohit"
+      ]
+    },
+    "action_items": [
+      {
+        "title": "confirm regional inventory sync",
+        "owner": "Meena",
+        "priority": "critical",
+        "deadline": "before launch",
+        "dependency": "none",
+        "risk_flag": true
+      },
+      {
+        "title": "enable pricing patch",
+        "owner": "Ashu",
+        "priority": "critical",
+        "deadline": "after inventory confirmation",
+        "dependency": "confirm regional inventory sync",
+        "risk_flag": true
+      },
+      {
+        "title": "prepare customer comms draft",
+        "owner": "Divya",
+        "priority": "high",
+        "deadline": "4 PM",
+        "dependency": "approve launch window",
+        "risk_flag": false
+      },
+      {
+        "title": "approve launch window",
+        "owner": "Kousik",
+        "priority": "high",
+        "deadline": "before 4 PM",
+        "dependency": "none",
+        "risk_flag": true
+      },
+      {
+        "title": "verify payment fallback flow",
+        "owner": "Priya",
+        "priority": "critical",
+        "deadline": "before rollout",
+        "dependency": "none",
+        "risk_flag": true
+      },
+      {
+        "title": "update rollback steps",
+        "owner": "Rohit",
+        "priority": "high",
+        "deadline": "if blocker is reported",
+        "dependency": "verify payment fallback flow",
+        "risk_flag": true
+      }
+    ]
+  }
+]

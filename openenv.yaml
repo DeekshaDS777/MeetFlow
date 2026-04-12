@@ -1,35 +1,19 @@
-name: meetflow_workflow_env
-description: Multi-step meeting workflow automation environment
-version: 2.0.0
-
+name: meetflow_phase3
+version: 3.0.0
+description: Multi-stage meeting workflow environment with hybrid extraction and LLM decision making.
 entrypoint:
   module: server.app
   app: app
-
-api:
-  base_url: http://localhost:7860
-
 metadata:
   domain: meeting_operations
-  modality: text
-  reward_range: [0.0, 1.0]
   long_horizon: true
-  grader_type: deterministic_structured_grader
-
-endpoints:
+  reward_range: [0.01, 0.99]
+  tasks: [easy, medium, hard]
+api:
   reset: /reset
   step: /step
   state: /state
-
-tasks:
-  - name: easy
-    description: Simple workflow extraction
-  - name: medium
-    description: Moderate reasoning workflows
-  - name: hard
-    description: Complex multi-step workflows
-
 models:
-  observation: env.models.Observation
-  action: env.models.Action
-  reward: env.models.Reward
+  action: models.Action
+  observation: models.Observation
+  reward: models.Reward

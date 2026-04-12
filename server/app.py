@@ -1,80 +1,111 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
 import uvicorn
-from fastapi import FastAPI
-from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
 
-from env.environment import MeetFlowEnv
-from env.models import Action
+from models import Action
+from server.environment import MeetFlowEnvironment
 
-app = FastAPI(title="MeetFlow", version="2.0.0")
-env = MeetFlowEnv(task_name="hard")
+APP_TITLE = "MeetFlow"
+APP_VERSION = "3.0.3"
+DEFAULT_TASK = "hard"
+HOST = "0.0.0.0"
+PORT = 7860
+
+app = FastAPI(
+    title=APP_TITLE,
+    version=APP_VERSION,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+)
+
+# Single active environment for hackathon submission flow
+env = MeetFlowEnvironment(task_name=DEFAULT_TASK)
 
 
 class ResetRequest(BaseModel):
-    task_name: Optional[str] = "hard"
+    task_name: Optional[str] = Field(default=DEFAULT_TASK)
+
+
+def _serialize(obj: Any) -> Any:
+    if hasattr(obj, "model_dump"):
+        return obj.model_dump()
+    return obj
 
 
 @app.get("/")
-def root():
+def root() -> dict[str, str]:
     return {
-        "name": "MeetFlow",
+        "name": APP_TITLE,
         "status": "ok",
-        "version": "2.0.0",
+        "version": APP_VERSION,
+        "docs": "/docs",
+        "health": "/health",
     }
 
 
 @app.post("/reset")
-def reset(request: Optional[ResetRequest] = None):
-    task_name = "hard"
+def reset(request: Optional[ResetRequest] = None) -> dict[str, Any]:
+    global env
+    try:
+        task_name = DEFAULT_TASK
+        if request is not None and request.task_name:
+            task_name = str(request.task_name).strip() or DEFAULT_TASK
 
-    if request is not None and request.task_name:
-        task_name = request.task_name
+        env = MeetFlowEnvironment(task_name=task_name)
+        observation = env.reset()
 
-    env.task_name = task_name
-    observation = env.reset()
-
-    return {
-        "observation": observation.model_dump(),
-        "task_name": env.task_name,
-    }
+        return {
+            "observation": _serialize(observation),
+            "task_name": env.task_name,
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"reset failed: {exc}") from exc
 
 
 @app.post("/step")
-def step(action: Action):
-    observation, reward, done, info = env.step(action)
+def step(action: Action) -> dict[str, Any]:
+    try:
+        observation, reward = env.step(action)
 
-    score = reward
-    if isinstance(info, dict) and "score" in info:
-        score = info["score"]
+        score = reward.reward
+        if isinstance(reward.info, dict) and "score" in reward.info:
+            score = reward.info["score"]
 
-    return {
-        "observation": observation.model_dump(),
-        "reward": float(f"{reward:.4f}"),
-        "done": done,
-        "info": info,
-        "score": float(f"{score:.4f}"),
-    }
+        return {
+            "observation": _serialize(observation),
+            "reward": float(f"{float(reward.reward):.4f}"),
+            "done": bool(reward.done),
+            "info": reward.info if isinstance(reward.info, dict) else {"info": str(reward.info)},
+            "score": float(f"{float(score):.4f}"),
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"step failed: {exc}") from exc
 
 
 @app.get("/state")
-def state():
-    state_obj = env.state()
-    return state_obj.model_dump() if hasattr(state_obj, "model_dump") else state_obj
+def state() -> Any:
+    try:
+        state_obj = env.state()
+        return _serialize(state_obj)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"state failed: {exc}") from exc
 
 
 @app.get("/health")
-def health():
+def health() -> dict[str, str]:
     return {
         "status": "healthy",
-        "task_name": env.task_name,
+        "task_name": str(env.task_name),
     }
 
 
-def main():
-    uvicorn.run("server.app:app", host="0.0.0.0", port=7860, reload=False)
+def main() -> None:
+    uvicorn.run("server.app:app", host=HOST, port=PORT, reload=False)
 
 
 if __name__ == "__main__":

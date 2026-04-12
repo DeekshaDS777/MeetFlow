@@ -1,0 +1,84 @@
+[
+  {
+    "id": "easy_1",
+    "transcript": "Sprint planning: Ashu should refresh the onboarding guide by Wednesday. Divya will prepare the customer demo checklist by Thursday. Priya needs to verify the production backup today before the release notes go out.",
+    "meeting_context": {
+      "meeting_type": "planning",
+      "team": "product_ops",
+      "urgency": "medium",
+      "participants": [
+        "Ashu",
+        "Divya",
+        "Priya",
+        "Meena"
+      ]
+    },
+    "action_items": [
+      {
+        "title": "refresh onboarding guide",
+        "owner": "Ashu",
+        "priority": "medium",
+        "deadline": "Wednesday",
+        "dependency": "none",
+        "risk_flag": false
+      },
+      {
+        "title": "prepare customer demo checklist",
+        "owner": "Divya",
+        "priority": "medium",
+        "deadline": "Thursday",
+        "dependency": "none",
+        "risk_flag": false
+      },
+      {
+        "title": "verify production backup",
+        "owner": "Priya",
+        "priority": "high",
+        "deadline": "today",
+        "dependency": "none",
+        "risk_flag": true
+      }
+    ]
+  },
+  {
+    "id": "easy_2",
+    "transcript": "Weekly support sync: Rohit should update the API quickstart by Friday. Sanjai will verify the billing FAQ links today. Meena needs to archive the stale feature flags by end of day.",
+    "meeting_context": {
+      "meeting_type": "ops_sync",
+      "team": "support_enablement",
+      "urgency": "medium",
+      "participants": [
+        "Rohit",
+        "Sanjai",
+        "Meena",
+        "Divya"
+      ]
+    },
+    "action_items": [
+      {
+        "title": "update API quickstart",
+        "owner": "Rohit",
+        "priority": "medium",
+        "deadline": "Friday",
+        "dependency": "none",
+        "risk_flag": false
+      },
+      {
+        "title": "verify billing FAQ links",
+        "owner": "Sanjai",
+        "priority": "medium",
+        "deadline": "today",
+        "dependency": "none",
+        "risk_flag": false
+      },
+      {
+        "title": "archive stale feature flags",
+        "owner": "Meena",
+        "priority": "medium",
+        "deadline": "end of day",
+        "dependency": "none",
+        "risk_flag": false
+      }
+    ]
+  }
+]
