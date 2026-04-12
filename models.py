@@ -132,7 +132,7 @@ class Reward(BaseModel):
 
     reward: float = Field(..., gt=0.0, lt=1.0)
     done: bool
-    score: float = Field(..., gt=0.0, lt=1.0)
+    score: float = Field(..., gt=0, lt=1)
     info: Dict[str, Any] = Field(default_factory=dict)
 
 

@@ -7,6 +7,9 @@ import textwrap
 from dataclasses import dataclass, field
 from difflib import SequenceMatcher
 from typing import TYPE_CHECKING, List, Optional
+import dotenv
+
+dotenv.load_dotenv()
 
 if TYPE_CHECKING:
     from openai import OpenAI
@@ -114,9 +117,9 @@ def log_step(step: int, action: str, reward: float, done: bool, error: Optional[
     )
 
 
-def log_end(success: bool, steps: int, rewards: List[float]) -> None:
+def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> None:
     rewards_str = ",".join(f"{r:.2f}" for r in rewards)
-    print(f"[END] success={str(success).lower()} steps={steps} rewards={rewards_str}", flush=True)
+    print(f"[END] success={str(success).lower()} steps={steps} score={score:.3f} rewards={rewards_str}", flush=True)
 
 
 def _canonicalize_title(candidate: str) -> str:
@@ -639,9 +642,9 @@ def run_task(task_name: str) -> None:
         while not env.done and steps_taken < env.max_steps:
             try:
                 action = choose_action(client, obs, cache)
-                obs, reward = env.step(action)
+                obs, reward= env.step(action)
             except Exception as exc:
-                reward_value = 0.01
+                reward_value = 0.05
                 rewards.append(reward_value)
                 steps_taken += 1
                 log_step(steps_taken, '{"action_type":"error"}', reward_value, True, str(exc))
@@ -656,7 +659,8 @@ def run_task(task_name: str) -> None:
                 cache.stage = ""
         success = env.success
     finally:
-        log_end(success, steps_taken, rewards)
+        final_score = reward.score if rewards else 0.1
+        log_end(success, steps_taken, final_score, rewards)
 
 
 def main() -> None:

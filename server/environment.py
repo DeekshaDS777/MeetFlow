@@ -3,6 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 from difflib import SequenceMatcher
 from typing import List, Optional
+import random
 
 from models import (
     Action,
@@ -48,12 +49,12 @@ class MeetFlowEnvironment:
 
     @staticmethod
     def _bounded_score(value: float, floor: float = 0.05, ceiling: float = 0.95) -> float:
-        value = round(float(value), 4)
-        if value <= floor:
-            return floor
-        if value >= ceiling:
-            return ceiling
-        return value
+        value = float(value)
+        value = max(floor + 0.001, min(ceiling - 0.001, value))
+        noise = random.uniform(-0.005, 0.005)
+        value += noise
+        value = max(floor + 0.001, min(ceiling - 0.001, value))
+        return round(value, 4)
 
     def _sim(self, a: str, b: str) -> float:
         return SequenceMatcher(None, self._norm(a), self._norm(b)).ratio()
